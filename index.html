@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+</head>
+<body>
+    <div id="btn">btn</div>
+</body>
+
+
+<!-- socket.io -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/2.1.1/socket.io.dev.js"></script>
+
+<script>
+  var socket = io.connect('http://localhost:8080');
+  socket.on('news', function (data) {
+    console.log(data);
+    socket.emit('my other event', { my: 'data' });
+  });
+
+  socket.on('message',function(data){
+      console.log(data);
+  })
+
+  var btn = document.getElementById('btn');
+  btn.onclick = function(){
+      socket.emit('my other event',{hh:'ry'});
+  }
+
+//   接受广播的消息例子
+  socket.on('broadcast message all',function(data){
+      console.log(data);
+  });
+</script>
+</html>
