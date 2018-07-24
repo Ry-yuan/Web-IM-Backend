@@ -1,12 +1,91 @@
-var app = require('express')();
-var server = require('http').Server(app);
-var io = require('socket.io')(server);
+let app = require('express')();
+let server = require('http').Server(app);
+// websocket工具
+let io = require('socket.io')(server);
+// mongodb数据库工具
+let mongoose = require('mongoose');
+let Schema = mongoose.Schema;
+let User = require('./module/user.js');
+// api路由
+let Router = require('./router');
+// 端口
+const PORT  = process.env.PORT || 8000;
+// 解析post数据
+let bodyParser = require('body-parser');
+app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({extended: false}));
+// cookie
+const cookieParser = require('cookie-parser');
+app.use(cookieParser());
+// express-session
+let session = require('express-session');
+let FileStore = require('session-file-store')(session);
+app.use(session({
+    secret: 'sid',
+    resave: false,
+    store: new FileStore(),
+    saveUninitialized: true,
+    cookie: {
+        maxAge: 600 * 1000  // 有效期，单位是毫秒
+    }
+  }))
 
-server.listen(8080);
+// 引入路由
+Router(app);
 
-app.get('/',function(req,res){
-    res.sendFile(__dirname +　"/index.html")
-});
+server.listen(8000,()=>{console.log(`Server Start at  ${PORT} port .......`)});
+
+
+
+
+
+
+// 保存数据
+// u1.save(function(err,res){
+//     if(err){
+//         console.log(err);
+//     }
+//     else{
+//         console.log('Result'+res);
+//     }
+// })
+
+
+
+/**
+ * 更新数据
+ * Model.update(conditions, update, [options], [callback])
+ */
+
+/**
+ * 删除数据
+ * Model.remove(conditions, [callback])
+ */
+var removeString = {'username':'ee'}
+
+User.remove(removeString,function(err,res){
+    if(err){
+        console.log(err);
+    }
+    // console.log('remove'+res);
+})
+/**
+ * 条件查询
+ * Model.find(conditions, [fields], [options], [callback])
+ */
+var whereString = {'age':'12'}
+User.find(whereString,function(err,res){
+    if(err){
+        console.log(err);
+    }
+    // console.log('Result'+res);
+})
+
+
+
+
+
+
 
 // 数组存储登录的用户
 var userlist = [];
@@ -29,6 +108,8 @@ io.on('connection',function(socket){
             }
             console.log(userlist);
         });
+        // 广播消息（包括自己）
+        io.sockets.emit('broadcast message all', userlist);
     });
 
     // 每个连接都有一个socket.id
