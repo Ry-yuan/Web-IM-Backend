@@ -76,10 +76,6 @@ let Router = (app)=>{
                 res.json({code:0,data:{username:result[0].username,password:result[0].password},msg:'success'});
             }
         });
-
-
-        
-        
     })
 }
 module.exports = Router;

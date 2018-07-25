@@ -26,7 +26,7 @@ app.use(session({
     store: new FileStore(),
     saveUninitialized: true,
     cookie: {
-        maxAge: 600 * 1000  // 有效期，单位是毫秒
+        maxAge: 6000 * 1000  // 有效期，单位是毫秒
     }
   }))
 
@@ -88,17 +88,26 @@ User.find(whereString,function(err,res){
 
 
 // 数组存储登录的用户
-var userlist = [];
-
+let userlist = [];
 // 事件：当有用户连接触发
 io.on('connection',function(socket){
-    // 增加一个用户，保存用户列表
-    userlist.push({
-        user:'user'+socket.id,
-        socketid:socket.id
-    });
+    
+    // 监听增加用户
+    socket.on('new user',function(data){
+        console.log('new user:');
+        console.log(data);
+        // 增加一个用户，保存用户列表
+        userlist.push({
+            username:data.username,
+            socketid:socket.id
+        });
+        // console.log(userlist);
+        // 广播消息（包括自己）
+        io.sockets.emit('broadcast message all', userlist);
+    })
+    
 
-    console.log(userlist);
+    
     // 用户断开连接时的操作
     socket.on('disconnect', function(){
         userlist.forEach((item,index)=>{
@@ -106,7 +115,7 @@ io.on('connection',function(socket){
                 // 断开链接后删除
                 userlist.splice(index,index+1);
             }
-            console.log(userlist);
+            // console.log(userlist);
         });
         // 广播消息（包括自己）
         io.sockets.emit('broadcast message all', userlist);
@@ -118,13 +127,14 @@ io.on('connection',function(socket){
     // 定义news，仅仅发送给自己
     // socket.emit('news',{hello:'ry'});
 
-    // 接受来自my other event的消息
-    socket.on('my other event',function(data){
-        // 发送消息
-        socket.emit('message',data);
-    });
-
-    // 广播消息（包括自己）
-    io.sockets.emit('broadcast message all', userlist);
-    
+    // 监听私人消息
+    socket.on("send private message" , function(data){
+        console.log(data);
+        let message = {
+            time:data.time,
+            message:data.message
+        }
+        // 发送信息给对应用户
+        socket.to(data.socketid).emit('receive private meassge', message);
+    })
 });
