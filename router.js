@@ -1,5 +1,6 @@
 let User = require('./module/user.js');
 let UserAction = require('./action/userAction');
+let Message = require('./module/message.js');
 let Router = (app)=>{
     // 路由
     app.get('/',function(req,res){
@@ -76,6 +77,77 @@ let Router = (app)=>{
                 res.json({code:0,data:{username:result[0].username,password:result[0].password},msg:'success'});
             }
         });
+    });
+
+
+    // 获取历史消息
+    app.get('/gethistory',(req,res)=>{
+        console.log(req.query);
+        let user = req.query.username;
+        let peer = req.query.peer;
+        let message = [];
+        // console.log('---------');
+        // console.log(user);
+        Message.find({username:user},(err,result)=>{
+            console.log('--------ss');
+            console.log(peer);
+            if(err){
+                console.log(err);
+            }
+            // console.log(result);
+            if(result.length !=0){
+                console.log(result[0]);
+                if(result[0].peer == peer){
+                    // result[0].historyMessage.forEach(element => {
+                    //         console.log(element.messageArr);
+                    //         message = element.messageArr;
+                        
+                    // });
+                    message = result[0].historyMessage;
+                }
+                console.log('-----');
+                console.log(message);
+                res.json({code:0,data:message,msg:'success'});
+            }
+        })
     })
+
+
+
+    // 测试保存message数据
+    // 创建对象
+    // let message =new Message({
+    //     username:'lala',
+    //     historyMessage: [{
+    //         peer:'yy',
+    //         messageArr:[{
+    //             sender:'ry',
+    //             time:'2017.10',
+    //             message:'hello'
+    //         }]
+    //     }],
+    // });
+    // 保存到数据库
+    // message.save((err,res)=>{
+    //     if(err){
+    //         console.log(err);
+    //     }
+    //     else {
+    //         return true;
+    //     }
+    // })
+
+    // 查询
+    // Message.find({username:'lala'},(err,result)=>{
+    //     if(!!result){
+    //         console.log(result[0]);
+            
+    //         result[0].historyMessage.forEach(element => {
+    //             if(element.peer == 'yy'){
+    //                 console.log(element.message);
+    //             }
+    //         });
+    //     }
+    // })
 }
 module.exports = Router;

@@ -20,6 +20,9 @@ app.use(cookieParser());
 // express-session
 let session = require('express-session');
 let FileStore = require('session-file-store')(session);
+
+// message schema
+let Message = require('./module/message.js');
 app.use(session({
     secret: 'sid',
     resave: false,
@@ -129,11 +132,71 @@ io.on('connection',function(socket){
 
     // 监听私人消息
     socket.on("send private message" , function(data){
+        // 对方
+        let peer = data.to;
         console.log(data);
         let message = {
+            sender:data.from,
             time:data.time,
             message:data.message
         }
+        // 判断数据库是否已经存在乙方
+        Message.find({username:data.from,peer:data.to},function(err,result){
+            if(err){
+                console.log(err);
+            }
+            // 不存在 则创建
+            if(result.length == 0){
+                // 添加到数据库 乙方
+                let messageData1 = new Message({
+                    username:data.from,
+                    peer:data.to,
+                    historyMessage: [message]
+                });
+                // 保存
+                messageData1.save((err,res)=>{
+                    if(err){
+                        console.log(err);
+                    }
+                })
+            }
+            // 如果存在
+            else{
+                let messageList = [];
+                // 拿到某对方历史记录
+                if(result[0].peer == peer){
+                    messageList = result[0].historyMessage;
+                }
+                messageList.push(message);
+                console.log('-mess-')
+                console.log(messageList);
+                console.log(data);
+                Message.update({username:data.from,peer:data.to},{historyMessage: messageList},function(err,re){
+                    if(err){
+                        console.log(err);
+                    }
+                })
+            }
+        })
+        
+        // 添加到数据库 对方
+        // let messageData2 = new Message({
+        //     username:data.to,
+        //     historyMessage: [{
+        //     peer:data.from,
+        //     messageArr:[message]
+        //     }]
+        // });
+        console.log('-----f');
+        console.log(data.from);
+        console.log(data.to);
+       
+        // messageData2.save((err,res)=>{
+        //     if(err){
+        //         console.log(err);
+        //     }
+        // })
+
         // 发送信息给对应用户
         socket.to(data.socketid).emit('receive private meassge', message);
     })
