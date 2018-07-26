@@ -146,7 +146,8 @@ io.on('connection', function (socket) {
         let message = {
             sender: data.from,
             time: data.time,
-            message: data.message
+            message: data.message,
+            picture: data.picture
         }
         // 标志
         let belong1 = data.from + '&' + data.to;

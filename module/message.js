@@ -10,7 +10,8 @@ var messageSchema = new Schema({
     historyMessage: [{
             sender:{type:String},
             time:{type:String},
-            message:{type:String}
+            message:{type:String},
+            picture:{type:String}
     }]
    });
 
