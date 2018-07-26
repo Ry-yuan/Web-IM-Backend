@@ -88,26 +88,44 @@ let Router = (app)=>{
         let message = [];
         // console.log('---------');
         // console.log(user);
-        Message.find({username:user},(err,result)=>{
-            console.log('--------ss');
-            console.log(peer);
+        let belong1 = user +'&' +peer;
+        let belong2 = peer + '&' + user;
+        Message.find({belong:belong1},(err,result)=>{
+            console.log('---请求历史数据1-----');
+            console.log(belong1);
             if(err){
                 console.log(err);
             }
             // console.log(result);
+            // 如果有数据
             if(result.length !=0){
+                console.log('---有数据返回1---')
                 console.log(result[0]);
-                if(result[0].peer == peer){
-                    // result[0].historyMessage.forEach(element => {
-                    //         console.log(element.messageArr);
-                    //         message = element.messageArr;
-                        
-                    // });
-                    message = result[0].historyMessage;
-                }
-                console.log('-----');
+                message = result[0].historyMessage;
                 console.log(message);
                 res.json({code:0,data:message,msg:'success'});
+            }
+            // 如果没有数据 再查
+            else{
+                Message.find({belong:belong2},(err,result)=>{
+                    console.log('---请求历史数据2-----');
+                    console.log(belong1);
+                    if(err){
+                        console.log(err);
+                    }
+                    // console.log(result);
+                    // 如果有数据
+                    if(result.length !=0){
+                        console.log('---有数据返回2---')
+                        console.log(result[0]);
+                        message = result[0].historyMessage;
+                        console.log(message);
+                        res.json({code:0,data:message,msg:'success'});
+                    }
+                    else{
+                        console.log('没有数据');
+                    }
+                })
             }
         })
     })

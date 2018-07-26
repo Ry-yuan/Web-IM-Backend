@@ -1,10 +1,12 @@
-var mongoose = require('../db-connect');
+const mongoose = require('mongoose');
+const connectMongodb = require('../db-connect');
+const path = '/local';
+connectMongodb(mongoose,path);
 
 var Schema = mongoose.Schema;
 
 var messageSchema = new Schema({
-    username: { type: String, required: true, unique: true },
-    peer:{type:String,required:true},
+    belong: { type: String, required: true },
     historyMessage: [{
             sender:{type:String},
             time:{type:String},
