@@ -140,6 +140,7 @@ io.on('connection', function (socket) {
 
     // 监听私人消息
     socket.on("send private message", function (data) {
+        let username = data.from;
         // 对方
         let peer = data.to;
         console.log(data);
@@ -149,77 +150,92 @@ io.on('connection', function (socket) {
             message: data.message,
             picture: data.picture
         }
-        // 标志
-        let belong1 = data.from + '&' + data.to;
-        let belong2 = data.to + '&' + data.from;
-        let messageList = [];
-        // 判断数据集合1是否已存在
-        Message.find({
-            belong: belong1
-        }, function (err, result) {
-            if (err) {
-                console.log(err);
-            }
-            // 不存在
-            if (result.length == 0) {
-                // 判断是否存在另一个数据集合2
-                Message.find({
-                    belong: belong2
-                }, function (err, re) {
-                    if (err) {
-                        console.log(err)
-                    }
-                    // 都不存在 创建数据库
-                    if (re.length == 0) {
-                        // 添加到数据库 
-                        let messageData1 = new Message({
-                            belong: belong2,
-                            historyMessage: [message]
-                        });
-                        // 保存到数据库
-                        messageData1.save((err, res) => {
-                            if (err) {
-                                console.log(err);
-                            }
-                        })
-                    }
-                    // 已有数据集合2
-                    else {
-                        messageList = re[0].historyMessage;
-                        messageList.push(message);
-                        console.log('---消息列表--');
-                        console.log(result[0]);
-                        console.log(messageList);
-                        // 消息插入数据库
-                        Message.update({
-                            belong:belong2
-                        }, {
-                            historyMessage: messageList
-                        }, function (err, re) {
-                            if (err) {
-                                console.log(err);
-                            }
-                        });
-                    }
-                })
-            }
-            // 如果已存在数据库1
-            else {
-                messageList = result[0].historyMessage;
-                messageList.push(message);
-                // 消息插入数据库
-                Message.update({
-                    belong:belong1
-                }, {
-                    historyMessage: messageList
-                }, function (err, re) {
-                    if (err) {
-                        console.log(err);
-                    }
-                });
-            }
-        })
+
+
+        // 保存数据
+        saveData(username, peer, message);
+        saveData(peer, username, message);
         // 发送信息给对应用户
         socket.to(data.socketid).emit('receive private meassge', message);
     })
+
+    // 监听撤回消息
+    socket.on('recall message', function (data) {
+        console.log('撤回');
+        console.log(data);
+        //从数据库删除
+        deleteMsgDate(data,data.from,data.to);
+        deleteMsgDate(data,data.to,data.from);
+        // 发送信息给对应用户
+        socket.to(data.socketid).emit('recall message', data);
+    });
 });
+
+
+// 删除数据
+function deleteMsgDate(data,username,peer) {
+    console.log(data);
+    Message.update({
+        username: username,
+        peer:peer
+    }, {
+        '$pull': {
+            historyMessage: {
+                time: data.time
+            }
+        }
+    }, function (err, data) {
+        if (err) {
+            console.log(err);
+        }
+        console.log(data);
+    });
+}
+
+// 保存数据
+function saveData(user1, user2, message) {
+    let messageList = [];
+    // 判断数据集合是否已存在
+    Message.find({
+        username: user1,
+        peer: user2
+    }, function (err, result) {
+        if (err) {
+            console.log(err);
+        }
+        // 不存在
+        if (result.length == 0) {
+            let messageData1 = new Message({
+                username: user1,
+                peer: user2,
+                historyMessage: [message]
+            });
+            // 保存到数据库
+            messageData1.save((err, res) => {
+                if (err) {
+                    console.log(err);
+                }
+            })
+        }
+
+        // 已有数据集合2
+        else {
+            messageList = result[0].historyMessage;
+            messageList.push(message);
+            console.log('---消息列表--');
+            console.log(result[0]);
+            console.log(messageList);
+            // 消息插入数据库
+            Message.update({
+                username: user1,
+                peer: user2
+            }, {
+                historyMessage: messageList
+            }, function (err, re) {
+                if (err) {
+                    console.log(err);
+                }
+            });
+        }
+    });
+}

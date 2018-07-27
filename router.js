@@ -86,18 +86,13 @@ let Router = (app)=>{
         let user = req.query.username;
         let peer = req.query.peer;
         let message = [];
-        // console.log('---------');
-        // console.log(user);
-        let belong1 = user +'&' +peer;
-        let belong2 = peer + '&' + user;
-        Message.find({belong:belong1},(err,result)=>{
+        Message.find({username:user,peer:peer},(err,result)=>{
             console.log('---请求历史数据1-----');
-            console.log(belong1);
+            console.log(user);
             if(err){
                 console.log(err);
             }
-            // console.log(result);
-            // 如果有数据
+            // 有数据
             if(result.length !=0){
                 console.log('---有数据返回1---')
                 console.log(result[0]);
@@ -105,27 +100,8 @@ let Router = (app)=>{
                 console.log(message);
                 res.json({code:0,data:message,msg:'success'});
             }
-            // 如果没有数据 再查
             else{
-                Message.find({belong:belong2},(err,result)=>{
-                    console.log('---请求历史数据2-----');
-                    console.log(belong1);
-                    if(err){
-                        console.log(err);
-                    }
-                    // console.log(result);
-                    // 如果有数据
-                    if(result.length !=0){
-                        console.log('---有数据返回2---')
-                        console.log(result[0]);
-                        message = result[0].historyMessage;
-                        console.log(message);
-                        res.json({code:0,data:message,msg:'success'});
-                    }
-                    else{
-                        console.log('没有数据');
-                    }
-                })
+                console.log('没有数据');
             }
         })
     })

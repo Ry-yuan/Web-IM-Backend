@@ -6,7 +6,8 @@ connectMongodb(mongoose,path);
 var Schema = mongoose.Schema;
 
 var messageSchema = new Schema({
-    belong: { type: String, required: true },
+    username:{type:String,required:true},
+    peer:{type:String,required:true},
     historyMessage: [{
             sender:{type:String},
             time:{type:String},
