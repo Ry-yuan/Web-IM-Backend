@@ -34,7 +34,13 @@ app.use(session({
         maxAge: 6000 * 1000 // 有效期，单位是毫秒
     }
 }))
-
+// app.all('*', function (req, res, next) {
+//     res.header('Access-Control-Allow-Origin', 'http://localhost:8080');
+//     res.header('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE');
+//     res.header('Access-Control-Allow-Headers', 'Content-Type');
+//     res.header('Access-Control-Allow-Credentials','true');
+//     next()
+//   })
 // 引入路由
 Router(app);
 
@@ -68,41 +74,56 @@ server.listen(8000, () => {
  * 删除数据
  * Model.remove(conditions, [callback])
  */
-var removeString = {
-    'username': 'ee'
-}
+// var removeString = {
+//     'username': 'ee'
+// }
 
-User.remove(removeString, function (err, res) {
-    if (err) {
-        console.log(err);
-    }
-    // console.log('remove'+res);
-})
+// User.remove(removeString, function (err, res) {
+//     if (err) {
+//         console.log(err);
+//     }
+// })
 /**
  * 条件查询
  * Model.find(conditions, [fields], [options], [callback])
  */
-var whereString = {
-    'age': '12'
-}
-User.find(whereString, function (err, res) {
-    if (err) {
-        console.log(err);
-    }
-    // console.log('Result'+res);
-})
+// var whereString = {
+//     'age': '12'
+// }
+// User.find(whereString, function (err, res) {
+//     if (err) {
+//         console.log(err);
+//     };
+// })
 
 
 
 
 
-
-
+// 修改
+// Message.find({
+//     username:'ryyuan',
+//     peer:'yyyyyy',
+// },(err,result)=>{
+//     console.log('测试查找修改');
+//     let re = result[0].historyMessage;
+//     // console.log(result[0].historyMessage);
+//     re.map(item=>{
+//         if(item.time == '1532766804274'){
+//             console.log(item);
+//             item.message = 'modify';
+//         }
+//     });
+//     // 插入数据库
+//     Message.update({username:'ryyuan',peer:'yyyyyy'},{historyMessage:re},function(err,result){
+//         console.log('插入');
+//         console.log(result);
+//     })
+// })
 // 数组存储登录的用户
 let userlist = [];
 // 事件：当有用户连接触发
 io.on('connection', function (socket) {
-
     // 监听增加用户
     socket.on('new user', function (data) {
         console.log('new user:');
@@ -110,7 +131,9 @@ io.on('connection', function (socket) {
         // 增加一个用户，保存用户列表
         userlist.push({
             username: data.username,
-            socketid: socket.id
+            socketid: socket.id,
+            sex:data.sex,
+            status:1
         });
         // console.log(userlist);
         // 广播消息（包括自己）
@@ -169,8 +192,50 @@ io.on('connection', function (socket) {
         // 发送信息给对应用户
         socket.to(data.socketid).emit('recall message', data);
     });
-});
 
+    // 监听修改消息
+    socket.on('modify message', function (data) {
+        console.log('修改');
+        console.log(data);
+        //从数据库删除
+        modifyMsgDate(data,data.from,data.to);
+        modifyMsgDate(data,data.to,data.from);
+        // 发送信息给对应用户
+        socket.to(data.socketid).emit('modify message', data);
+    });
+});
+// 修改数据
+function modifyMsgDate(data,username,peer){
+    console.log('修改数据');
+    console.log(data)
+    Message.find({
+        username:username,
+        peer:peer
+    },(err,result)=>{
+        console.log('xxxx');
+        console.log(result[0]);
+        // 拿到消息列表
+        let msgList = result[0].historyMessage;
+        msgList.map(msgitem=>{
+            if(msgitem.time == data.time){
+                // 修改数据
+                msgitem.message = data.message;
+            }
+            console.log('修改这个消息');
+            console.log(msgitem);
+        });
+        // 放回数据库
+        Message.update({
+            username:username,
+            peer:peer       
+        },{historyMessage:msgList},(err,re)=>{
+            if(err){
+                console.log(err);
+            }
+            console.log('修改后插入数据库成功');
+        });
+    })
+}
 
 // 删除数据
 function deleteMsgDate(data,username,peer) {
@@ -238,4 +303,7 @@ function saveData(user1, user2, message) {
             });
         }
     });
+
+
+    
 }

@@ -1,24 +1,15 @@
 let User = require('../module/user');
+const crypto = require('crypto');
 let userAction = {
-    // 判断是否注册过
-    isRegister:function(data){
-        User.find({username:data.username},(err,result)=>{
-            if(err){
-                console.log(err);
-                return true;
-            }
-            if(result.length == 0 ){
-                return false;
-            }
-            else {return true;}
-        });
-    },
     // 保存用户
     saved : function(data){
+            // 加密密码
+            let cryptPassword = crypto.createHash('md5').update(data.password).digest('hex');
              // 创建对象
             let user =new User({
                 username : data.username,
-                password : data.password
+                password : cryptPassword,
+                sex:data.sex
             });
             // 保存到数据库
             user.save((err,res)=>{

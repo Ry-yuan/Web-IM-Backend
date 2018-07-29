@@ -1,7 +1,9 @@
 let User = require('./module/user.js');
 let UserAction = require('./action/userAction');
 let Message = require('./module/message.js');
+const crypto = require('crypto');
 let Router = (app)=>{
+   
     // 路由
     app.get('/',function(req,res){
         // res.sendFile(__dirname +　"/index.html");
@@ -32,6 +34,7 @@ let Router = (app)=>{
     app.post('/userlogin',(req,res)=>{
         // 获得数据
         let data = req.body;
+
         // 查找用户
         User.find({username:data.username},(err,result)=>{
             if(err){
@@ -41,8 +44,9 @@ let Router = (app)=>{
             // 存在账号
             if(result.length !== 0 ){
                 // 判断密码是否相同
+                let cryptPassword = crypto.createHash('md5').update(data.password).digest('hex');                
                 console.log(result);
-                if(result[0].password == data.password){
+                if(result[0].password == cryptPassword){
                     let sid = req.session.id;
                     // 发送cookies 来识别已登陆
                     res.cookie('sid',req.session.id);
@@ -63,18 +67,36 @@ let Router = (app)=>{
         })
     })
 
+    // 注销接口
+    app.post('/logout',(req,res)=>{
+        console.log(req.cookies.sid);
+        console.log(req.body);
+        console.log('注销');
+        // console.log(req.cookies.sid);
+        let sid = req.cookies.sid;
+        req.session[sid] = null;
+        console.log(req.session[sid]);
+        res.json({code:0,data:{},msg:'success'});
+    });
 
     app.get('/chat',(req,res)=>{
+        console.log('session----------------');
+        console.log(req.session);
         // 获取保存在cookie中的sid
         let sid = req.cookies.sid;
-        let user = req.session[sid]
+        let user = req.session[sid];
+        // 如果没有用户 返回
+        if(user == null || user == undefined){
+            res.json({code:1,data:{},msg:'nologin'});
+            return;
+        }
         // 查找用户资料
         User.find({username:user},(err,result)=>{
             if(err){
                 console.log(err);
             }
-            else{
-                res.json({code:0,data:{username:result[0].username,password:result[0].password},msg:'success'});
+            else if(result.length!=0){
+                res.json({code:0,data:{username:result[0].username,sex:result[0].sex},msg:'success'});
             }
         });
     });
@@ -102,10 +124,30 @@ let Router = (app)=>{
             }
             else{
                 console.log('没有数据');
+                res.json({code:0,data:{},msg:'no data'});
             }
         })
     })
 
+    // 历史用户列表
+    app.get('/get_history_userlist',(req,res)=>{
+        console.log('请求历史用户');
+        console.log(req.query);
+        let username = req.query.username;
+        // 查找数据库
+        Message.find({username:username},'peer',(err,result)=>{
+            console.log(result);
+            let data = [];
+            result.map(item=>{
+                // 除去自己
+                if(item.peer != username){
+                    data.push({username:item.peer});
+                }
+            })
+            console.log(data);
+            res.json({code:0,data:data,msg:'success'});
+        })
+    })
 
 
     // 测试保存message数据
