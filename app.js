@@ -214,7 +214,8 @@ function modifyMsgDate(data,username,peer){
     },(err,result)=>{
         console.log('xxxx');
         console.log(result[0]);
-        // 拿到消息列表
+        if(result.length != 0){
+             // 拿到消息列表
         let msgList = result[0].historyMessage;
         msgList.map(msgitem=>{
             if(msgitem.time == data.time){
@@ -234,6 +235,7 @@ function modifyMsgDate(data,username,peer){
             }
             console.log('修改后插入数据库成功');
         });
+        }
     })
 }
 
