@@ -10,7 +10,7 @@ let Router = (app)=>{
         res.json({uid:123});
     });
 
-    // 注册接口
+    // 1 注册接口
     app.post('/userregister', (req,res)=>{
         // 获得数据
         let data = req.body;
@@ -30,7 +30,7 @@ let Router = (app)=>{
         });
     })
 
-    // 登录接口
+    // 2 登录接口
     app.post('/userlogin',(req,res)=>{
         // 获得数据
         let data = req.body;
@@ -67,7 +67,7 @@ let Router = (app)=>{
         })
     })
 
-    // 注销接口
+    // 3 注销接口
     app.post('/logout',(req,res)=>{
         console.log(req.cookies.sid);
         console.log(req.body);
@@ -79,6 +79,8 @@ let Router = (app)=>{
         res.json({code:0,data:{},msg:'success'});
     });
 
+
+    // 4 聊天接口
     app.get('/chat',(req,res)=>{
         console.log('session----------------');
         console.log(req.session);
@@ -102,7 +104,7 @@ let Router = (app)=>{
     });
 
 
-    // 获取历史消息
+    // 5 获取历史消息
     app.get('/gethistory',(req,res)=>{
         console.log(req.query);
         let user = req.query.username;
@@ -129,7 +131,7 @@ let Router = (app)=>{
         })
     })
 
-    // 历史用户列表
+    // 6 历史用户列表
     app.get('/get_history_userlist',(req,res)=>{
         console.log('请求历史用户');
         console.log(req.query);
@@ -148,42 +150,5 @@ let Router = (app)=>{
             res.json({code:0,data:data,msg:'success'});
         })
     })
-
-
-    // 测试保存message数据
-    // 创建对象
-    // let message =new Message({
-    //     username:'lala',
-    //     historyMessage: [{
-    //         peer:'yy',
-    //         messageArr:[{
-    //             sender:'ry',
-    //             time:'2017.10',
-    //             message:'hello'
-    //         }]
-    //     }],
-    // });
-    // 保存到数据库
-    // message.save((err,res)=>{
-    //     if(err){
-    //         console.log(err);
-    //     }
-    //     else {
-    //         return true;
-    //     }
-    // })
-
-    // 查询
-    // Message.find({username:'lala'},(err,result)=>{
-    //     if(!!result){
-    //         console.log(result[0]);
-            
-    //         result[0].historyMessage.forEach(element => {
-    //             if(element.peer == 'yy'){
-    //                 console.log(element.message);
-    //             }
-    //         });
-    //     }
-    // })
 }
 module.exports = Router;
