@@ -1,17 +1,17 @@
-let app = require('express')();
-let server = require('http').Server(app);
+const app = require('express')();
+const server = require('http').Server(app);
 // websocket工具
-let io = require('socket.io')(server);
+const io = require('socket.io')(server);
 // mongodb数据库工具
-let mongoose = require('mongoose');
-let Schema = mongoose.Schema;
-let User = require('./module/user.js');
+const mongoose = require('mongoose');
+const Schema = mongoose.Schema;
+const User = require('./module/user.js');
 // api路由
-let Router = require('./router');
+const Router = require('./router');
 // 端口
 const PORT = process.env.PORT || 8000;
 // 解析post数据
-let bodyParser = require('body-parser');
+const bodyParser = require('body-parser');
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({
     extended: false
@@ -20,8 +20,8 @@ app.use(bodyParser.urlencoded({
 const cookieParser = require('cookie-parser');
 app.use(cookieParser());
 // express-session
-let session = require('express-session');
-let FileStore = require('session-file-store')(session);
+const session = require('express-session');
+const FileStore = require('session-file-store')(session);
 
 // message schema
 let Message = require('./module/message.js');
@@ -48,7 +48,6 @@ server.listen(8000, () => {
     console.log(`Server Start at  ${PORT} port .......`)
 });
 
-
 // 数组存储登录的用户
 let userlist = [];
 // 事件：当有用户连接触发
@@ -61,34 +60,26 @@ io.on('connection', function (socket) {
         userlist.push({
             username: data.username,
             socketid: socket.id,
-            sex:data.sex,
-            status:1
+            sex: data.sex,
+            status: 1
         });
         // console.log(userlist);
         // 广播消息（包括自己）
         io.sockets.emit('broadcast message all', userlist);
     })
 
-
-
     // 用户断开连接时的操作
     socket.on('disconnect', function () {
         userlist.forEach((item, index) => {
             if (item.socketid === socket.id) {
                 // 断开链接后删除
-                userlist.splice(index, index + 1);
+                userlist.splice(index, 1);
             }
             // console.log(userlist);
         });
         // 广播消息（包括自己）
         io.sockets.emit('broadcast message all', userlist);
     });
-
-    // 每个连接都有一个socket.id
-    // console.log(socket.id);
-
-    // 定义news，仅仅发送给自己
-    // socket.emit('news',{hello:'ry'});
 
     // 监听私人消息
     socket.on("send private message", function (data) {
@@ -102,8 +93,6 @@ io.on('connection', function (socket) {
             message: data.message,
             picture: data.picture
         }
-
-
         // 保存数据
         saveData(username, peer, message);
         saveData(peer, username, message);
@@ -116,8 +105,8 @@ io.on('connection', function (socket) {
         console.log('撤回');
         console.log(data);
         //从数据库删除
-        deleteMsgDate(data,data.from,data.to);
-        deleteMsgDate(data,data.to,data.from);
+        deleteMsgDate(data, data.from, data.to);
+        deleteMsgDate(data, data.to, data.from);
         // 发送信息给对应用户
         socket.to(data.socketid).emit('recall message', data);
     });
@@ -127,53 +116,56 @@ io.on('connection', function (socket) {
         console.log('修改');
         console.log(data);
         //从数据库删除
-        modifyMsgDate(data,data.from,data.to);
-        modifyMsgDate(data,data.to,data.from);
+        modifyMsgDate(data, data.from, data.to);
+        modifyMsgDate(data, data.to, data.from);
         // 发送信息给对应用户
         socket.to(data.socketid).emit('modify message', data);
     });
 });
+
 // 修改数据
-function modifyMsgDate(data,username,peer){
+function modifyMsgDate(data, username, peer) {
     console.log('修改数据');
     console.log(data)
     Message.find({
-        username:username,
-        peer:peer
-    },(err,result)=>{
+        username: username,
+        peer: peer
+    }, (err, result) => {
         console.log('xxxx');
         console.log(result[0]);
-        if(result.length != 0){
-             // 拿到消息列表
-        let msgList = result[0].historyMessage;
-        msgList.map(msgitem=>{
-            if(msgitem.time == data.time){
-                // 修改数据
-                msgitem.message = data.message;
-            }
-            console.log('修改这个消息');
-            console.log(msgitem);
-        });
-        // 放回数据库
-        Message.update({
-            username:username,
-            peer:peer       
-        },{historyMessage:msgList},(err,re)=>{
-            if(err){
-                console.log(err);
-            }
-            console.log('修改后插入数据库成功');
-        });
+        if (result.length != 0) {
+            // 拿到消息列表
+            let msgList = result[0].historyMessage;
+            msgList.map(msgitem => {
+                if (msgitem.time == data.time) {
+                    // 修改数据
+                    msgitem.message = data.message;
+                }
+                console.log('修改这个消息');
+                console.log(msgitem);
+            });
+            // 放回数据库
+            Message.update({
+                username: username,
+                peer: peer
+            }, {
+                historyMessage: msgList
+            }, (err, re) => {
+                if (err) {
+                    console.log(err);
+                }
+                console.log('修改后插入数据库成功');
+            });
         }
     })
 }
 
 // 删除数据
-function deleteMsgDate(data,username,peer) {
+function deleteMsgDate(data, username, peer) {
     console.log(data);
     Message.update({
         username: username,
-        peer:peer
+        peer: peer
     }, {
         '$pull': {
             historyMessage: {
@@ -234,7 +226,4 @@ function saveData(user1, user2, message) {
             });
         }
     });
-
-
-    
 }
