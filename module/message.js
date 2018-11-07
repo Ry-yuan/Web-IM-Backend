@@ -1,11 +1,6 @@
 const mongoose = require('mongoose');
-const connectMongodb = require('../db-connect');
-const path = '/local';
-connectMongodb(mongoose,path);
-
-var Schema = mongoose.Schema;
-
-var messageSchema = new Schema({
+const Schema = mongoose.Schema;
+let messageSchema = new Schema({
     username:{type:String,required:true},
     peer:{type:String,required:true},
     historyMessage: [{
@@ -16,6 +11,6 @@ var messageSchema = new Schema({
     }]
    });
 
-var Message = mongoose.model('Message', messageSchema);
+let Message = mongoose.model('Message', messageSchema);
 
 module.exports = Message;
